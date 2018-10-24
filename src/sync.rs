@@ -23,6 +23,7 @@ pub fn one_way(left: impl AsRef<Path>, right: impl AsRef<Path>) -> io::Result<()
             }
         }
 
+        println!("{}\n -> {}", copy_from.display(), copy_to.display());
         let _ = fs::copy(copy_from, copy_to)?;
     }
 
