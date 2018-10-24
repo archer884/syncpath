@@ -1,5 +1,3 @@
-#![feature(dbg_macro)]
-
 #[macro_use]
 extern crate structopt;
 
