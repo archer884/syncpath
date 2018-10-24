@@ -1,0 +1,9 @@
+[package]
+name = "syncpath"
+version = "0.1.0"
+authors = ["J/A <archer884@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+structopt = "0.2"
+walkdir = "2.2"
