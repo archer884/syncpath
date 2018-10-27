@@ -6,11 +6,15 @@ use std::path::PathBuf;
 #[structopt(name = "syncpath", about = "syncs directories")]
 pub struct Opt {
     #[structopt(parse(from_os_str))]
-    left: PathBuf,
+    pub left: PathBuf,
     #[structopt(parse(from_os_str))]
-    right: PathBuf,
+    pub right: PathBuf,
     #[structopt(short = "x", long = "two-way")]
-    sync_both: bool,
+    pub sync_both: bool,
+    #[structopt(short = "w", long = "write")]
+    pub write: bool,
+    #[structopt(short = "v", long = "verbose")]
+    pub verbose: bool,
 }
 
 impl Opt {
@@ -20,9 +24,9 @@ impl Opt {
 
     pub fn execute(self) -> io::Result<()> {
         if self.sync_both {
-            sync::two_way(self.left, self.right)
+            sync::two_way(&self)
         } else {
-            sync::one_way(self.left, self.right)
+            sync::one_way(&self)
         }
     }
 }

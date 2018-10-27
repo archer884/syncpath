@@ -1,21 +1,23 @@
-use crate::entry::{Entry, FileInfo};
+use crate::{
+    entry::{Entry, FileInfo},
+    options::Opt,
+};
 use std::collections::HashSet;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-pub fn one_way(left: impl AsRef<Path>, right: impl AsRef<Path>) -> io::Result<()> {
-    let left = left.as_ref();
-    let right = right.as_ref();
-
-    let left_tree: HashSet<_> = get_items(left).collect();
-    let right_tree: HashSet<_> = get_items(right).collect();
+pub fn one_way(options: &Opt) -> io::Result<()> {
+    let left_tree: HashSet<_> = get_items(&options.left).collect();
+    let right_tree: HashSet<_> = get_items(&options.right).collect();
     let mut path_creator = PathCreator::new();
 
+    let write_results = !options.write || options.verbose;
+
     for file in left_tree.difference(&right_tree) {
-        let copy_from = left.join(file.path());
-        let copy_to = right.join(file.path());
+        let copy_from = options.left.join(file.path());
+        let copy_to = options.right.join(file.path());
 
         if let Some(parent) = copy_to.parent() {
             if !parent.as_os_str().is_empty() {
@@ -23,14 +25,19 @@ pub fn one_way(left: impl AsRef<Path>, right: impl AsRef<Path>) -> io::Result<()
             }
         }
 
-        println!("{}\n -> {}", copy_from.display(), copy_to.display());
-        let _ = fs::copy(copy_from, copy_to)?;
+        if write_results {
+            println!("{}\n -> {}", copy_from.display(), copy_to.display());
+        }
+
+        if options.write {
+            let _ = fs::copy(copy_from, copy_to)?;
+        }
     }
 
     Ok(())
 }
 
-pub fn two_way(_left: impl AsRef<Path>, _right: impl AsRef<Path>) -> io::Result<()> {
+pub fn two_way(_options: &Opt) -> io::Result<()> {
     unimplemented!()
 }
 
