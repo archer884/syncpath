@@ -1,16 +1,15 @@
-use crate::{
-    entry::{Entry, FileInfo},
-    options::Opt,
-};
+mod dir;
+mod marker;
+mod paths;
+
+use self::{marker::Marker, paths::PathCreator};
+use crate::options::Opt;
 use std::collections::HashSet;
-use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
+use std::{fs, io};
 
 pub fn one_way(options: &Opt) -> io::Result<()> {
-    let left_tree: HashSet<_> = get_items(&options.left).collect();
-    let right_tree: HashSet<_> = get_items(&options.right).collect();
+    let left_tree: HashSet<_> = dir::get_items(&options.left).collect();
+    let right_tree: HashSet<_> = dir::get_items(&options.right).collect();
     let mut path_creator = PathCreator::new();
 
     let write_results = !options.write || options.verbose;
@@ -19,17 +18,17 @@ pub fn one_way(options: &Opt) -> io::Result<()> {
         let copy_from = options.left.join(file.path());
         let copy_to = options.right.join(file.path());
 
-        if let Some(parent) = copy_to.parent() {
-            if !parent.as_os_str().is_empty() {
-                path_creator.ensure_path(parent)?;
-            }
-        }
-
         if write_results {
             println!("{}\n -> {}", copy_from.display(), copy_to.display());
         }
 
         if options.write {
+            if let Some(parent) = copy_to.parent() {
+                if !parent.as_os_str().is_empty() {
+                    path_creator.ensure_path(parent)?;
+                }
+            }
+            
             let _ = fs::copy(copy_from, copy_to)?;
         }
     }
@@ -37,46 +36,39 @@ pub fn one_way(options: &Opt) -> io::Result<()> {
     Ok(())
 }
 
-pub fn two_way(_options: &Opt) -> io::Result<()> {
-    unimplemented!()
-}
+pub fn two_way(options: &Opt) -> io::Result<()> {
+    let left_tree: HashSet<_> = dir::get_items(&options.left).map(Marker::Left).collect();
+    let right_tree: HashSet<_> = dir::get_items(&options.right).map(Marker::Right).collect();
+    let mut path_creator = PathCreator::new();
 
-fn get_items<'a>(path: impl AsRef<Path> + 'a) -> impl Iterator<Item = FileInfo> + 'a {
-    WalkDir::new(path.as_ref())
-        .into_iter()
-        .filter_map(move |entry| match entry {
-            Err(_) => None,
-            Ok(entry) => {
-                Entry::from_entry(entry)
-                    .ok()
-                    .and_then(|entry| match entry.into_file_info() {
-                        None => None,
-                        Some(mut entry) => {
-                            let _ = entry.strip_prefix(path.as_ref());
-                            Some(entry)
-                        }
-                    })
-            }
-        })
-}
+    let write_results = !options.write || options.verbose;
 
-#[derive(Debug, Default)]
-struct PathCreator {
-    set: HashSet<PathBuf>,
-}
+    for file in left_tree.symmetric_difference(&right_tree) {
+        let (copy_from, copy_to) = match file {
+            Marker::Left(file) => (
+                options.left.join(file.path()),
+                options.right.join(file.path()),
+            ),
+            Marker::Right(file) => (
+                options.right.join(file.path()),
+                options.left.join(file.path()),
+            ),
+        };
 
-impl PathCreator {
-    fn new() -> PathCreator {
-        Default::default()
-    }
-
-    fn ensure_path(&mut self, path: impl AsRef<Path> + Into<PathBuf>) -> io::Result<()> {
-        if !self.set.contains(path.as_ref()) {
-            if !path.as_ref().exists() {
-                fs::create_dir_all(path.as_ref())?;
-            }
-            self.set.insert(path.into());
+        if write_results {
+            println!("{}\n -> {}", copy_from.display(), copy_to.display());
         }
-        Ok(())
+
+        if options.write {
+            if let Some(parent) = copy_to.parent() {
+                if !parent.as_os_str().is_empty() {
+                    path_creator.ensure_path(parent)?;
+                }
+            }
+
+            let _ = fs::copy(copy_from, copy_to)?;
+        }
     }
+
+    Ok(())
 }
