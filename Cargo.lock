@@ -113,7 +113,7 @@ dependencies = [
 
 [[package]]
 name = "syncpath"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "structopt 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "walkdir 2.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
