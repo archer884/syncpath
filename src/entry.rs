@@ -36,7 +36,6 @@ impl FileInfo {
     }
 }
 
-// Attempt to fix screwy bullshit...
 impl Hash for FileInfo {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.len.hash(state);
