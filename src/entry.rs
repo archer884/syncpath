@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 use std::io::{self, Error, ErrorKind};
 use std::path::{Path, PathBuf, StripPrefixError};
 use std::time::SystemTime as Time;
@@ -16,7 +17,7 @@ pub struct DirectoryInfo {
     modified: Option<Time>,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Eq)]
 pub struct FileInfo {
     path: PathBuf,
     len: u64,
@@ -32,6 +33,20 @@ impl FileInfo {
     pub fn strip_prefix(&mut self, prefix: impl AsRef<Path>) -> Result<(), StripPrefixError> {
         self.path = self.path.strip_prefix(prefix)?.to_owned();
         Ok(())
+    }
+}
+
+// Attempt to fix screwy bullshit...
+impl Hash for FileInfo {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.len.hash(state);
+        self.path.hash(state);
+    }
+}
+
+impl PartialEq for FileInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.len == other.len && self.path == other.path
     }
 }
 

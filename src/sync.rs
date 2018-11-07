@@ -26,7 +26,7 @@ pub fn one_way(options: &Opt) -> io::Result<()> {
         }
 
         if write_results {
-            println!("{}\n -> {}", copy_from.display(), copy_to.display());
+            println!("{}\n -> {}\n  ({:?})", copy_from.display(), copy_to.display(), file.path().display());
         }
 
         if options.write {
