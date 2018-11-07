@@ -11,7 +11,6 @@ use std::io;
 //
 // - This stupid tool is way too happy to copy over things like .DS_Store files.
 // - Implement two-way mode.
-// - Add 'silent' mode.
 
 fn main() -> io::Result<()> {
     options::Opt::from_args().execute()
