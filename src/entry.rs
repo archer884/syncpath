@@ -34,6 +34,17 @@ impl FileInfo {
         self.path = self.path.strip_prefix(prefix)?.to_owned();
         Ok(())
     }
+
+    /// Whether or not the file is "hidden" in a unix-like filesystem.
+    ///
+    /// This feature exists basically to avoid the annoying .DS_Store behavior associated with
+    /// the Finder on macOS, so it doens't refer to hidden files in Windows, but only any file
+    /// with a name beginning with a dot.
+    pub fn is_hidden(&self) -> bool {
+        self.path.file_name().map_or(false, |name| {
+            name.to_str().map_or(false, |name| name.starts_with('.'))
+        })
+    }
 }
 
 impl Hash for FileInfo {

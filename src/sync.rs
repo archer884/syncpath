@@ -9,8 +9,8 @@ use std::collections::HashSet;
 use std::io;
 
 pub fn one_way(options: &Opt) -> io::Result<()> {
-    let left_tree: HashSet<_> = dir::get_items(&options.left).collect();
-    let right_tree: HashSet<_> = dir::get_items(&options.right).collect();
+    let left_tree: HashSet<_> = dir::get_items(&options.left, options.all_files).collect();
+    let right_tree: HashSet<_> = dir::get_items(&options.right, options.all_files).collect();
 
     let mut writer = Writer::from_options(options);
 
@@ -24,8 +24,12 @@ pub fn one_way(options: &Opt) -> io::Result<()> {
 }
 
 pub fn two_way(options: &Opt) -> io::Result<()> {
-    let left_tree: HashSet<_> = dir::get_items(&options.left).map(Marker::Left).collect();
-    let right_tree: HashSet<_> = dir::get_items(&options.right).map(Marker::Right).collect();
+    let left_tree: HashSet<_> = dir::get_items(&options.left, options.all_files)
+        .map(Marker::Left)
+        .collect();
+    let right_tree: HashSet<_> = dir::get_items(&options.right, options.all_files)
+        .map(Marker::Right)
+        .collect();
 
     let mut writer = Writer::from_options(options);
 
